@@ -1,1 +1,1 @@
-neofetch/fastfetch-like program written in C
+very simple neofetch/fastfetch-like program written in C
