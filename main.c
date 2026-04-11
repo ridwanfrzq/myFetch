@@ -1,4 +1,5 @@
 #include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
 #include <sys/utsname.h>
 
@@ -50,9 +51,26 @@ void get_hostname() {
     fclose(file);
 }
 
+void get_shell() {
+    char *str = getenv("SHELL");
+
+    if (!str) {
+        return;
+    }
+
+    char* ptr = strrchr(str, '/');
+    if (!ptr) {
+        printf("Shell: %s\n", str);
+        return;
+    }
+    
+    printf("Shell: %s\n", ptr + 1);
+}
+
 int main() {
     get_os();
     get_kernel();
     get_hostname();
+    get_shell();
     return 0;
 }
