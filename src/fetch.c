@@ -4,43 +4,47 @@
 #include <sys/utsname.h>
 #include "fetch.h"
 
-void get_os() {
+void get_os(char *buf, size_t size) {
   FILE *file = fopen("/etc/os-release", "r");
     
     if (!file) {
-        printf("OS: Unknown\n");
+        snprintf(buf, size, "Unknown");
         return;
     }
     char line[256];
 
     while (fgets(line, sizeof(line), file)) {
         if (strncmp(line, "PRETTY_NAME=", 12) == 0) {
-        char *value = strchr(line, '=');
-        if (!value) break;
-        value++;
-        value[strcspn(value, "\n")] = '\0';
-        if (*value == '"') value++;
-        size_t len = strlen(value);
-        if (len > 0 && value[len - 1] == '"')
-            value[len - 1] = '\0';
-        printf("OS: %s\n", value);
-        break;
+            char *value = strchr(line, '=');
+            if (!value) break;
+
+            value++;
+            value[strcspn(value, "\n")] = '\0';
+            if (*value == '"') value++;
+
+            size_t len = strlen(value);
+            if (len > 0 && value[len - 1] == '"') {
+                value[len - 1] = '\0';
+            }
+
+            snprintf(buf, size, "%s", value);
+            break;
         }
     }
     fclose(file);
 }
 
-void get_kernel() {
+void get_kernel(char *buf, size_t size) {
     struct utsname u;
     uname(&u);
-    printf("Kernel: %s %s\n", u.sysname, u.release);
+    snprintf(buf, size, "%s %s", u.sysname, u.release);
 }
 
-void get_hostname() {
+void get_hostname(char *buf, size_t size) {
     FILE *file = fopen("/etc/hostname", "r");
 
     if (!file) {
-        printf("Hostname: Unknown\n");
+        snprintf(buf, size, "Unknown");
         return;
     }
 
@@ -48,11 +52,11 @@ void get_hostname() {
   
     fgets(line, sizeof(line), file);
     line[strcspn(line, "\n")] = '\0';
-    printf("Hostname: %s\n", line);
+    snprintf(buf, size, "%s", line);
     fclose(file);
 }
 
-void get_shell() {
+void get_shell(char *buf, size_t size) {
     char *str = getenv("SHELL");
 
     if (!str) {
@@ -61,18 +65,19 @@ void get_shell() {
 
     char* ptr = strrchr(str, '/');
     if (!ptr) {
-        printf("Shell: %s\n", str);
+        snprintf(buf, size, "%s", str);
         return;
     }
     
-    printf("Shell: %s\n", ptr + 1);
+    ptr++;
+    snprintf(buf, size, "%s", ptr);
 }
 
-void get_cpu() {
+void get_cpu(char *buf, size_t size) {
     FILE *file = fopen("/proc/cpuinfo", "r");
 
     if (!file) {
-        printf("CPU: Unknown\n");
+        snprintf(buf, size, "Unknown");
         return;
     }
 
@@ -81,18 +86,19 @@ void get_cpu() {
         if (strncmp(line, "model name", 10) == 0) {
             char *value = strchr(line, ':');
             value[strcspn(value, "\n")] = '\0';
-            printf("CPU: %s\n", value + 2);
+            value += 2;
+            snprintf(buf, size, "%s", value);
             break;
         }
     }
     fclose(file);
 }
 
-void get_memory() {
+void get_memory(char *buf, size_t size) {
     FILE *file = fopen("/proc/meminfo", "r");
 
     if (!file) {
-        printf("Memory: N/A\n");
+        snprintf(buf, size, "N/A");
         return;
     }
 
@@ -114,6 +120,7 @@ void get_memory() {
     
      if (mem_total == 0) {
         printf("Memory: N/A\n");
+        snprintf(buf, size, "N/A");
         return;
     }
 
@@ -122,5 +129,5 @@ void get_memory() {
     double used_gb = total_gb - avail_gb;
     int percentage = used_gb / total_gb * 100;
 
-    printf("Memory: %.2f GB / %.2f GB (%d%%)\n", used_gb, total_gb, percentage);
+    snprintf(buf, size, "%.2f GB / %.2f GB (%d%%)", used_gb, total_gb, percentage);
 }

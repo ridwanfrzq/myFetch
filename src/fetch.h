@@ -1,11 +1,13 @@
 #ifndef FETCH_H
 #define FETCH_H
 
-void get_os();
-void get_kernel();
-void get_hostname();
-void get_shell();
-void get_cpu();
-void get_memory();
+#include <stddef.h>
+
+void get_os(char *buf, size_t size);
+void get_kernel(char *buf, size_t size);
+void get_hostname(char *buf, size_t size);
+void get_shell(char *buf, size_t size);
+void get_cpu(char *buf, size_t size);
+void get_memory(char *buf, size_t size);
 
 #endif
