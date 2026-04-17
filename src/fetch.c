@@ -2,16 +2,18 @@
 #include <stdlib.h>
 #include <string.h>
 #include <sys/utsname.h>
+#include <pwd.h>
+#include <unistd.h>
 #include "fetch.h"
 
 void get_user(char *buf, size_t size) {
-    char *str = getenv("USER");
+    struct passwd *pw = getpwuid(getuid());
 
-    if (!str) {
+    if (!pw) {
         return;
     }
 
-    snprintf(buf, size, "%s", str);
+    snprintf(buf, size, "%s", pw->pw_name);
 }
 
 void get_hostname(char *buf, size_t size) {
