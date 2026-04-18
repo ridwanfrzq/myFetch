@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <sys/sysinfo.h>
 #include <sys/utsname.h>
 #include <pwd.h>
 #include <unistd.h>
@@ -132,4 +133,22 @@ void get_memory(char *buf, size_t size) {
     int percentage = used_gb / total_gb * 100;
 
     snprintf(buf, size, "%.2f GB / %.2f GB (%d%%)", used_gb, total_gb, percentage);
+}
+
+void get_uptime(char *buf, size_t size) {
+    struct sysinfo info;
+    if (sysinfo(&info) == 0) {
+        long seconds = info.uptime;
+        long minutes = seconds / 60;
+        long hours = seconds / 3600;
+
+        if (seconds < 60) {
+            snprintf(buf, size, "%ld seconds", seconds);
+        } else if (seconds >= 60 && seconds < 3600) {
+            snprintf(buf, size, "%ld minutes", minutes);
+        } else {
+            minutes -= 60;
+            snprintf(buf, size, "%ld hours %ld minutes", hours, minutes);
+        }
+    }
 }

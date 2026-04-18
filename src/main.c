@@ -9,6 +9,7 @@ int main() {
     char shell[50];
     char cpu[50];
     char memory[50];
+    char uptime[50];
     
     putchar('\n');
 
@@ -30,6 +31,9 @@ int main() {
 
     get_memory(memory, sizeof(memory));
     printf("memory\t%s\n", memory);
+
+    get_uptime(uptime, sizeof(uptime));
+    printf("uptime\t%s\n", uptime);
     
     return 0;
 }
