@@ -6,28 +6,29 @@
 #include <pwd.h>
 #include <unistd.h>
 #include "fetch.h"
+#include "struct.h"
 
-void get_user(char *buf, size_t size) {
+void get_user(Info *ptr) {
     struct passwd *pw = getpwuid(getuid());
 
     if (!pw) {
         return;
     }
 
-    snprintf(buf, size, "%s", pw->pw_name);
+    snprintf(ptr->user, sizeof(ptr->user), "%s", pw->pw_name);
 }
 
-void get_hostname(char *buf, size_t size) {
+void get_hostname(Info *ptr) {
     struct utsname u;
     uname(&u);
-    snprintf(buf, size, "%s", u.nodename);
+    snprintf(ptr->hostname, sizeof(ptr->hostname), "%s", u.nodename);
 }
 
-void get_os(char *buf, size_t size) {
+void get_os(Info *ptr) {
   FILE *file = fopen("/etc/os-release", "r");
     
     if (!file) {
-        snprintf(buf, size, "Unknown");
+        snprintf(ptr->os, sizeof(ptr->os), "Unknown");
         return;
     }
     char line[256];
@@ -46,41 +47,41 @@ void get_os(char *buf, size_t size) {
                 value[len - 1] = '\0';
             }
 
-            snprintf(buf, size, "%s", value);
+            snprintf(ptr->os, sizeof(ptr->os), "%s", value);
             break;
         }
     }
     fclose(file);
 }
 
-void get_kernel(char *buf, size_t size) {
+void get_kernel(Info *ptr) {
     struct utsname u;
     uname(&u);
-    snprintf(buf, size, "%s %s", u.sysname, u.release);
+    snprintf(ptr->kernel, sizeof(ptr->kernel), "%s %s", u.sysname, u.release);
 }
 
-void get_shell(char *buf, size_t size) {
+void get_shell(Info *ptr) {
     char *str = getenv("SHELL");
 
     if (!str) {
         return;
     }
 
-    char* ptr = strrchr(str, '/');
-    if (!ptr) {
-        snprintf(buf, size, "%s", str);
+    char* p = strrchr(str, '/');
+    if (!p) {
+        snprintf(ptr->shell, sizeof(ptr->shell), "%s", str);
         return;
     }
     
-    ptr++;
-    snprintf(buf, size, "%s", ptr);
+    p++;
+    snprintf(ptr->shell, sizeof(ptr->shell), "%s", p);
 }
 
-void get_cpu(char *buf, size_t size) {
+void get_cpu(Info *ptr) {
     FILE *file = fopen("/proc/cpuinfo", "r");
 
     if (!file) {
-        snprintf(buf, size, "Unknown");
+        snprintf(ptr->cpu, sizeof(ptr->cpu), "Unknown");
         return;
     }
 
@@ -90,18 +91,18 @@ void get_cpu(char *buf, size_t size) {
             char *value = strchr(line, ':');
             value[strcspn(value, "\n")] = '\0';
             value += 2;
-            snprintf(buf, size, "%s", value);
+            snprintf(ptr->cpu, sizeof(ptr->cpu), "%s", value);
             break;
         }
     }
     fclose(file);
 }
 
-void get_memory(char *buf, size_t size) {
+void get_memory(Info *ptr) {
     FILE *file = fopen("/proc/meminfo", "r");
 
     if (!file) {
-        snprintf(buf, size, "N/A");
+        snprintf(ptr->memory, sizeof(ptr->memory), "N/A");
         return;
     }
 
@@ -122,8 +123,7 @@ void get_memory(char *buf, size_t size) {
     fclose(file);
     
      if (mem_total == 0) {
-        printf("Memory: N/A\n");
-        snprintf(buf, size, "N/A");
+        snprintf(ptr->memory, sizeof(ptr->memory), "N/A");
         return;
     }
 
@@ -132,10 +132,10 @@ void get_memory(char *buf, size_t size) {
     double used_gb = total_gb - avail_gb;
     int percentage = used_gb / total_gb * 100;
 
-    snprintf(buf, size, "%.2f GB / %.2f GB (%d%%)", used_gb, total_gb, percentage);
+    snprintf(ptr->memory, sizeof(ptr->memory), "%.2f GB / %.2f GB (%d%%)", used_gb, total_gb, percentage);
 }
 
-void get_uptime(char *buf, size_t size) {
+void get_uptime(Info *ptr) {
     struct sysinfo info;
     if (sysinfo(&info) == 0) {
         long seconds = info.uptime;
@@ -143,12 +143,23 @@ void get_uptime(char *buf, size_t size) {
         long hours = seconds / 3600;
 
         if (seconds < 60) {
-            snprintf(buf, size, "%ld seconds", seconds);
+            snprintf(ptr->uptime, sizeof(ptr->uptime), "%ld seconds", seconds);
         } else if (seconds >= 60 && seconds < 3600) {
-            snprintf(buf, size, "%ld minutes", minutes);
+            snprintf(ptr->uptime, sizeof(ptr->uptime), "%ld minutes", minutes);
         } else {
-            minutes -= 60;
-            snprintf(buf, size, "%ld hours %ld minutes", hours, minutes);
+            minutes = (seconds % 3600) / 60;
+            snprintf(ptr->uptime, sizeof(ptr->uptime), "%ld hours %ld minutes", hours, minutes);
         }
     }
+}
+
+void get_info(Info *ptr) {
+    get_user(ptr);
+    get_hostname(ptr);
+    get_os(ptr);
+    get_kernel(ptr);
+    get_shell(ptr);
+    get_cpu(ptr);
+    get_memory(ptr);
+    get_uptime(ptr);
 }
