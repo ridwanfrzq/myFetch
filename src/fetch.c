@@ -64,6 +64,7 @@ void get_shell(Info *ptr) {
     char *str = getenv("SHELL");
 
     if (!str) {
+        snprintf(ptr->shell, sizeof(ptr->shell), "Unknown");
         return;
     }
 
